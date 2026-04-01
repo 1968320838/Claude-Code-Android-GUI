@@ -1,7 +1,7 @@
 # Claude Code Android GUI客户端 开发计划书
 
 ## 一、项目概述
-
+ 
 **项目名称**: ClaudeBox (暂定)
 
 **项目目标**: 开发一款Android图形界面客户端，通过Termux作为后端运行环境，调用运行在Termux中的Claude Code CLI，实现AI编程辅助功能的移动端体验。
