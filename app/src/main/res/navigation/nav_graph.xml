@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/chatFragment">
+
+    <fragment
+        android:id="@+id/chatFragment"
+        android:name="com.claudebox.ui.chat.ChatFragment"
+        android:label="@string/nav_chat" />
+
+    <fragment
+        android:id="@+id/terminalFragment"
+        android:name="com.claudebox.ui.terminal.TerminalFragment"
+        android:label="@string/nav_terminal" />
+
+    <fragment
+        android:id="@+id/filesFragment"
+        android:name="com.claudebox.ui.files.FilesFragment"
+        android:label="@string/nav_files" />
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.claudebox.ui.settings.SettingsFragment"
+        android:label="@string/nav_settings" />
+
+</navigation>

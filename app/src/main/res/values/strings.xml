@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ClaudeBox</string>
+    <string name="nav_chat">Chat</string>
+    <string name="nav_terminal">Terminal</string>
+    <string name="nav_files">Files</string>
+    <string name="nav_settings">Settings</string>
+</resources>
