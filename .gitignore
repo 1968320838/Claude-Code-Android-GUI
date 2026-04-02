@@ -1,14 +1,99 @@
-# IDEA
+# ==================== 已编译的文件 ====================
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+*.log
+
+# ==================== Gradle ====================
+.gradle/
+build/
+*/build/
+*.apk
+*.ap_
+*.aab
+*.dex
+*.pro
+*.proguard
+
+# ==================== Android Studio / IDEA ====================
 .idea/
 *.iml
 *.ipr
 *.iws
+*.hprof
+.idea_modules/
+.externalNativeBuild
+.cxx/
+intermediates/
+generated/
 
-# 构建文件
-/build/
-*.apk
-*.aab
-
-# 本地配置
+# ==================== 本地配置文件 ====================
+local.properties
 *.local.properties
+secrets.properties
+keystore.properties
+
+# ==================== Keystore（除调试密钥外）====================
+*.jks
+*.keystore
+*.p12
+*.pfx
+!debug.keystore
+
+# ==================== 敏感信息 ====================
+secrets/
+*.pem
+*.key
+*.cert
+
+# ==================== OS 系统文件 ====================
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ==================== 版本控制临时文件 ====================
+*.orig
+*~
+*.swp
+*.swo
+*.swn
+
+# ==================== NDK/C++ 构建 ====================
+*.so
+*.o
+*.a
+*.lib
+.obj/
+
+# ==================== Kotlin ====================
+*.kotlin_module
+*.kotlin_metadata
+*.kjsm
+
+# ==================== 捕获的截图和日志 ====================
+captures/
+screenshots/
+log/
+
+# ==================== 测试报告和覆盖率 ====================
+reports/
+coverage/
+jacoco/
+htmlcov/
+
+# ==================== 其他 ====================
+bin/
+gen/
+out/
+release/
+tmp/
+temp/
