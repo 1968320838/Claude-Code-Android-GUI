@@ -75,8 +75,11 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 
-    // SSH
-    implementation("com.jcraft:jsch:0.2.18")
+    // SSH - using mwiede fork which is actively maintained
+    implementation("com.github.mwiede:jsch:0.2.20") {
+        exclude(group = "org.jetbrains", module = "annotations")
+        exclude(group = "org.jetbrains", module = "annotations-java5")
+    }
 
     // Markdown
     implementation("io.noties.markwon:core:4.6.2")
@@ -94,4 +97,11 @@ dependencies {
 
 kapt {
     correctErrorTypes = true
+}
+
+configurations.all {
+    resolutionStrategy {
+        force("org.jetbrains:annotations:23.0.0")
+    }
+    exclude(group = "org.jetbrains", module = "annotations-java5")
 }

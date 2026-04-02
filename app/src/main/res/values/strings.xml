@@ -5,4 +5,45 @@
     <string name="nav_terminal">Terminal</string>
     <string name="nav_files">Files</string>
     <string name="nav_settings">Settings</string>
+
+    <!-- 连接状态 -->
+    <string name="connection_disconnected">Disconnected</string>
+    <string name="connection_connected">Connected</string>
+    <string name="connection_connecting">Connecting…</string>
+    <string name="connection_error">Connection Error</string>
+    <string name="connection_reconnecting">Reconnecting (%1$d/%2$d)…</string>
+    <string name="connect">Connect</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="reconnect">Reconnect</string>
+
+    <!-- SSH 配置 -->
+    <string name="ssh_config_title">SSH Configuration</string>
+    <string name="host_hint">Host (e.g., 192.168.1.100)</string>
+    <string name="port_hint">Port</string>
+    <string name="username_hint">Username</string>
+    <string name="password_hint">Password</string>
+    <string name="private_key_path_hint">Private Key Path</string>
+    <string name="wrapper_path_hint">Claude Wrapper Script Path</string>
+
+    <!-- 认证方式 -->
+    <string name="auth_type_title">Authentication</string>
+    <string name="auth_password">Password</string>
+    <string name="auth_private_key">Private Key</string>
+
+    <!-- 操作按钮 -->
+    <string name="test_connection">Test</string>
+    <string name="save_config">Save</string>
+
+    <!-- 测试结果 -->
+    <string name="test_success">Connection successful!</string>
+    <string name="test_failed">Connection failed: %1$s</string>
+    <string name="config_saved">Configuration saved</string>
+    <string name="config_save_failed">Failed to save configuration</string>
+
+    <!-- 错误消息 -->
+    <string name="error_host_empty">Host cannot be empty</string>
+    <string name="error_port_invalid">Port must be between 1 and 65535</string>
+    <string name="error_username_empty">Username cannot be empty</string>
+    <string name="error_password_empty">Password cannot be empty</string>
+    <string name="error_key_path_empty">Private key path cannot be empty</string>
 </resources>

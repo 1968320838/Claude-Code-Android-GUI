@@ -46,4 +46,9 @@
     <!-- Outline -->
     <color name="outline_dark">#938F99</color>
     <color name="outline_light">#79747E</color>
+
+    <!-- Connection status -->
+    <color name="connection_success">#4CAF50</color>
+    <color name="connection_error">#F44336</color>
+    <color name="connection_warning">#FF9800</color>
 </resources>

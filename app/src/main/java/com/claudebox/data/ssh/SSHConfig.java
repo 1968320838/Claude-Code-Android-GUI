@@ -82,4 +82,20 @@ public class SSHConfig {
     public void setClaudeWrapperPath(String claudeWrapperPath) {
         this.claudeWrapperPath = claudeWrapperPath;
     }
+
+    /**
+     * 创建配置副本
+     */
+    public SSHConfig copy() {
+        SSHConfig copy = new SSHConfig();
+        copy.host = this.host;
+        copy.port = this.port;
+        copy.username = this.username;
+        copy.authType = this.authType;
+        copy.password = this.password;
+        copy.privateKeyPath = this.privateKeyPath;
+        copy.knownHostsPath = this.knownHostsPath;
+        copy.claudeWrapperPath = this.claudeWrapperPath;
+        return copy;
+    }
 }
