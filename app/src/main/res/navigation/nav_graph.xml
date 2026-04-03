@@ -5,9 +5,22 @@
     app:startDestination="@id/chatFragment">
 
     <fragment
+        android:id="@+id/sessionListFragment"
+        android:name="com.claudebox.ui.chat.SessionListFragment"
+        android:label="@string/sessions">
+        <action
+            android:id="@+id/action_sessionList_to_chat"
+            app:destination="@id/chatFragment" />
+    </fragment>
+
+    <fragment
         android:id="@+id/chatFragment"
         android:name="com.claudebox.ui.chat.ChatFragment"
-        android:label="@string/nav_chat" />
+        android:label="@string/nav_chat">
+        <action
+            android:id="@+id/action_chat_to_sessionList"
+            app:destination="@id/sessionListFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/terminalFragment"

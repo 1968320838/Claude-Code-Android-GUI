@@ -46,4 +46,23 @@
     <string name="error_username_empty">Username cannot be empty</string>
     <string name="error_password_empty">Password cannot be empty</string>
     <string name="error_key_path_empty">Private key path cannot be empty</string>
+
+    <!-- 会话 -->
+    <string name="sessions">Sessions</string>
+    <string name="new_session">New Session</string>
+    <string name="no_sessions">No sessions</string>
+    <string name="tap_to_create_session">Tap + to create a new session</string>
+    <string name="delete_session">Delete Session</string>
+    <string name="delete_session_confirm">Delete this session?</string>
+    <string name="session_deleted">Session deleted</string>
+    <string name="last_active">Last active: %1$s</string>
+    <string name="created">Created: %1$s</string>
+
+    <!-- 聊天 -->
+    <string name="no_session_selected">No session selected</string>
+    <string name="select_or_create_session">Select or create a session to start chatting</string>
+    <string name="type_message">Type a message…</string>
+    <string name="send">Send</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
 </resources>

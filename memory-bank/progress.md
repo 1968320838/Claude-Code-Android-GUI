@@ -143,3 +143,164 @@ app/src/main/
 - Phase 3: 终端模拟器集成 (xterm.js)、会话管理、聊天功能
 - Phase 4: 文件浏览器
 - Phase 5: 主题、字体、性能优化
+
+---
+
+## 2026-04-03 - Phase 3.1 完成 ✅
+
+### 完成内容
+
+**终端模拟器集成 (Step 3.1)**
+- `assets/terminal.html` - xterm.js 终端页面
+  - Material You 深色主题 (#1C1B1F 背景, #6750A4 强调色)
+  - Terminal 实例初始化、Fit addon、WebLinks addon
+  - JavaScript 接口暴露
+- `assets/xterm/xterm.js` (388 KB)
+- `assets/xterm/xterm.css` (4.4 KB)
+- `assets/xterm/xterm-addon-fit.js` (1.5 KB)
+- `assets/xterm/xterm-addon-web-links.js` (2.9 KB)
+- `ui/terminal/TerminalWebViewClient.kt` - WebViewClient 处理页面加载
+- `ui/terminal/TerminalJavaScriptInterface.kt` - Android-JS 通信接口
+- `ui/terminal/TerminalViewModel.kt` - 终端逻辑 (PTY 读写)
+- `ui/terminal/TerminalFragment.kt` - WebView 配置、键盘/旋转监听
+- `res/layout/fragment_terminal.xml` - WebView 布局 + loading overlay
+
+### 验证状态
+- [x] `./gradlew assembleDebug` 构建成功
+- [x] APK 生成在 `app/build/outputs/apk/debug/` (7.8 MB)
+
+---
+
+## 2026-04-03 - Phase 3.2 完成 ✅
+
+### 完成内容
+
+**会话列表页面 (Step 3.2)**
+- `data/local/entity/SessionEntity.java` - Room 会话实体
+- `data/local/entity/MessageEntity.java` - Room 消息实体
+- `data/local/dao/SessionDao.java` - 会话 CRUD 操作
+- `data/local/dao/MessageDao.java` - 消息 CRUD 操作
+- `data/local/AppDatabase.java` - Room 数据库
+- `data/repository/SessionRepositoryImpl.java` - 会话仓库实现
+- `ui/chat/SessionAdapter.kt` - RecyclerView 适配器
+- `ui/chat/ChatAdapter.kt` - 消息列表适配器
+- `ui/chat/ChatViewModel.kt` - 聊天/Session 共享 ViewModel (activityViewModels)
+- `ui/chat/ChatFragment.kt` - 聊天界面 (会话切换 toolbar)
+- `ui/chat/SessionListFragment.kt` - 会话列表 Fragment
+- `res/layout/fragment_chat.xml` - 聊天布局 (toolbar + messages + input)
+- `res/layout/fragment_session_list.xml` - 会话列表布局
+- `res/layout/item_session.xml` - 会话项布局
+- `res/layout/item_message_user.xml` - 用户消息气泡
+- `res/layout/item_message_bot.xml` - AI 消息气泡
+- `res/drawable/ic_add.xml`, `ic_delete.xml`, `ic_send.xml`, `ic_dropdown.xml`
+- `res/navigation/nav_graph.xml` - 添加 sessionListFragment
+
+### 验证状态
+- [x] `./gradlew assembleDebug` 构建成功
+- [x] APK 生成在 `app/build/outputs/apk/debug/` (8.9 MB)
+
+### 技术决策记录
+1. **ChatViewModel**: 使用 `activityViewModels()` 在 ChatFragment 和 SessionListFragment 间共享
+2. **Room Entity**: 使用 `@Ignore` 标注非静态构造函数，避免 Room 警告
+3. **会话选择**: 通过 Dialog 实现，而非新建 Fragment
+
+### 下一步
+- Phase 3.3: 消息发送/接收
+- Phase 3.4: Markdown 渲染
+- Phase 3.5: 代码高亮
+
+---
+
+## 2026-04-03 - Phase 3.3 完成 ✅
+
+### 完成内容
+
+**消息发送/接收修复 (Step 3.3)**
+- `TermuxRepository.ShellOutputListener` - 新增多观察者接口
+  - `onOutput(data)` - PTY 输出回调
+  - `onClosed()` - Shell 关闭回调
+- `TermuxRepositoryImpl` - 多监听者支持
+  - `CopyOnWriteArrayList<ShellOutputListener>` 存储监听器
+  - `readOutputLoop()` 通知所有监听器
+  - Shell 只创建一次，后续 `openClaudeSession()` 调用复用
+- `ChatViewModel` - 使用 ShellOutputListener 接收 AI 响应
+- `TerminalViewModel` - 也使用 ShellOutputListener
+
+### 验证状态
+- [x] `./gradlew assembleDebug` 构建成功
+- [x] APK 生成在 `app/build/outputs/apk/debug/` (8.9 MB)
+
+### 技术决策记录
+1. **多观察者模式**: Terminal 和 Chat 共享同一个 SSH shell，通过 CopyOnWriteArrayList 允许多个观察者接收输出
+2. **Shell 复用**: openClaudeSession() 如果 shell 已存在则直接回调，不会重新创建
+
+---
+
+## 2026-04-03 - Phase 3.4 完成 ✅
+
+### 完成内容
+
+**Markdown 渲染 (Step 3.4)**
+- `ui/chat/MarkwonFactory.kt` - Markwon 单例工厂
+  - 配置 CorePlugin + StrikethroughPlugin
+  - `toMarkdown(context, markdown)` 方法将 Markdown 转为 Spanned
+- `ChatAdapter` - BotMessageViewHolder 使用 Markwon 渲染消息内容
+
+### 支持的 Markdown 特性
+- 标题 (`#`, `##`, etc.)
+- 列表 (`-`, `1.`)
+- 强调 (`**bold**`, `*italic*`, `~~strikethrough~~`)
+- 链接和图片
+- 引用 (`>`)
+- 代码块和行内代码
+
+### 验证状态
+- [x] `./gradlew assembleDebug` 构建成功
+- [x] APK 生成在 `app/build/outputs/apk/debug/` (8.9 MB)
+
+---
+
+## 2026-04-03 - Phase 3.5 完成 ✅
+
+### 完成内容
+
+**代码高亮基础 (Step 3.5)**
+- `assets/highlight/highlight.js` (75KB) - Highlight.js 核心库 (已下载待用)
+- `item_message_bot.xml` - 更新消息布局
+  - 消息气泡最大宽度 280dp
+  - 代码块使用深色背景 (#2D2D2D)
+  - 行间距增加 (lineSpacingExtra="4dp")
+
+### 验证状态
+- [x] `./gradlew assembleDebug` 构建成功
+- [x] APK 生成在 `app/build/outputs/apk/debug/` (8.9 MB)
+
+### 待增强
+- 完整语法高亮（需要配置 SyntaxHighlightPlugin + Highlight.js integration）
+- 代码块复制按钮
+
+---
+
+## Phase 3 完成总结
+
+| Step | 内容 | 状态 |
+|------|------|------|
+| 3.1 | 终端模拟器 (xterm.js) | ✅ |
+| 3.2 | 会话列表 + 数据库 | ✅ |
+| 3.3 | 消息发送/接收 | ✅ |
+| 3.4 | Markdown 渲染 | ✅ |
+| 3.5 | 代码高亮基础 | ✅ |
+
+**验证状态**
+- [x] `./gradlew assembleDebug` 构建成功
+- [x] APK: `app/build/outputs/apk/debug/app-debug.apk` (8.9 MB)
+
+### 技术决策记录
+1. **共享 ViewModel**: ChatFragment 和 SessionListFragment 使用 `activityViewModels()` 共享 ChatViewModel
+2. **多监听者 Shell**: Terminal 和 Chat 通过 ShellOutputListener 共享同一个 SSH PTY
+3. **Markdown 渲染**: 使用 Markwon 库，纯 Android 实现无需 WebView
+4. **Room Entity 设计**: 使用 @Ignore 标注非静态构造函数，避免 Room 警告
+
+### 下一步
+- Phase 4: 文件浏览器
+- Phase 5: 主题、字体、性能优化

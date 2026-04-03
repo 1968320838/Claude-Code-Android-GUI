@@ -21,10 +21,16 @@ app/src/main/
 │   │   │   └── MainActivity.kt     # 导航宿主，管理 BottomNavigation
 │   │   ├── chat/                   # 聊天模块
 │   │   │   ├── ChatFragment.kt
-│   │   │   └── ChatViewModel.kt
+│   │   │   ├── ChatViewModel.kt
+│   │   │   ├── ChatAdapter.kt      # 消息列表适配器
+│   │   │   ├── SessionAdapter.kt   # 会话列表适配器
+│   │   │   ├── SessionListFragment.kt
+│   │   │   └── MarkwonFactory.kt  # Markdown 渲染工厂
 │   │   ├── terminal/               # 终端模块
 │   │   │   ├── TerminalFragment.kt
-│   │   │   └── TerminalViewModel.kt
+│   │   │   ├── TerminalViewModel.kt
+│   │   │   ├── TerminalWebViewClient.kt
+│   │   │   └── TerminalJavaScriptInterface.kt
 │   │   ├── files/                  # 文件模块
 │   │   │   ├── FilesFragment.kt
 │   │   │   └── FilesViewModel.kt
@@ -46,9 +52,16 @@ app/src/main/
 │   │   │   └── SSHClient.java      # SSH 客户端封装
 │   │   ├── repository/
 │   │   │   ├── TermuxRepositoryImpl.java  # Termux 仓库实现
+│   │   │   ├── SessionRepositoryImpl.java  # 会话仓库实现
 │   │   │   └── ConnectionManager.java      # 连接管理器（单例）
-│   │   └── local/
-│   │       └── ConfigManager.java  # 加密配置存储
+│   │   ├── local/
+│   │   │   ├── ConfigManager.java  # 加密配置存储
+│   │   ├── local/entity/
+│   │   │   ├── SessionEntity.java  # Room 会话实体
+│   │   │   └── MessageEntity.java   # Room 消息实体
+│   │   └── local/dao/
+│   │       ├── SessionDao.java     # 会话 DAO
+│   │       └── MessageDao.java     # 消息 DAO
 │   └── di/
 │       └── AppModule.java          # Hilt 依赖注入模块
 ├── res/
@@ -64,7 +77,11 @@ app/src/main/
 │   └── drawable/
 │       ├── ic_*.xml                # Vector 图标
 │       └── connection_indicator_*.xml  # 连接状态指示器
-└── assets/                         # 预留（xterm.js 等）
+└── assets/
+    ├── terminal.html               # xterm.js 终端页面
+    ├── xterm/                      # xterm.js 库文件
+    └── highlight/
+        └── highlight.js            # Highlight.js 代码高亮库
 ```
 
 ---
@@ -89,7 +106,7 @@ app/src/main/
 | `Message` | 消息实体：id, sessionId, content(HTML), rawContent(原始), isFromUser, timestamp |
 | `FileItem` | 文件项：name, path, isDirectory, size, modifiedAt |
 | `SessionRepository` | 会话 CRUD 接口：getSessions, createSession, deleteSession, getSession |
-| `TermuxRepository` | SSH 操作接口：connect, disconnect, executeCommand, isConnected + 回调接口 |
+| `TermuxRepository` | SSH 操作接口：connect, disconnect, executeCommand, isConnected + ShellOutputListener + ClaudeSessionCallback |
 
 ### Data 层 (Java)
 
@@ -98,9 +115,15 @@ app/src/main/
 | `SSHConfig` | SSH 连接参数：host, port, username, authType, password, privateKeyPath, knownHostsPath, claudeWrapperPath |
 | `ConnectionState` | 连接状态基类，子类：Disconnected, Connecting, Connected, Error(message), Reconnecting(attempt) |
 | `SSHClient` | JSch 封装：connect, disconnect, executeCommand, openShellChannel, ShellChannel 内部类 |
-| `TermuxRepositoryImpl` | TermuxRepository 实现：回调模式，ExecutorService 单线程执行，Claude 会话管理 |
+| `TermuxRepositoryImpl` | TermuxRepository 实现：回调模式，ExecutorService 单线程执行，Claude 会话管理，多 ShellOutputListener 支持 |
+| `SessionRepositoryImpl` | SessionRepository 实现：Room DAO 封装，数据库操作 |
 | `ConnectionManager` | 单例连接管理器：状态观察，AtomicReference 线程安全，自动重连（3次/指数退避） |
 | `ConfigManager` | EncryptedSharedPreferences 封装：AES256_GCM 加密存储 SSH 配置 |
+| `AppDatabase` | Room 数据库单例：包含 SessionDao 和 MessageDao |
+| `SessionEntity` | Room 会话实体：id, name, createdAt, lastActiveAt |
+| `MessageEntity` | Room 消息实体：id, sessionId, content, rawContent, isFromUser, timestamp |
+| `SessionDao` | 会话 DAO：getAll, insert, update, delete |
+| `MessageDao` | 消息 DAO：getBySession, insert, deleteBySession |
 
 ### UI 层 (Kotlin)
 
@@ -108,8 +131,14 @@ app/src/main/
 |----|------|
 | `ClaudeBoxApp` | Hilt Application，onCreate 中初始化 |
 | `MainActivity` | 导航宿主，setupWithNavController 绑定 BottomNavigation 与 NavController |
-| `ChatFragment/ViewModel` | 聊天界面，HiltViewModel 注入 |
-| `TerminalFragment/ViewModel` | 终端界面，HiltViewModel 注入 |
+| `ChatFragment/ViewModel` | 聊天界面，activityViewModels 共享，ShellOutputListener 接收 AI 响应，Markwon 渲染 Markdown |
+| `SessionListFragment` | 会话列表，共享 ChatViewModel |
+| `ChatAdapter` | RecyclerView 适配器，VIEW_TYPE_USER/VIEW_TYPE_BOT 区分消息类型 |
+| `SessionAdapter` | 会话列表适配器，显示会话名称和最后活跃时间 |
+| `MarkwonFactory` | Markwon 单例工厂，toMarkdown() 将 Markdown 转为 Spanned |
+| `TerminalFragment/ViewModel` | 终端界面，WebView + xterm.js，ShellOutputListener 接收 PTY 输出 |
+| `TerminalWebViewClient` | WebViewClient，处理 terminal.html 加载 |
+| `TerminalJavaScriptInterface` | Android-JS 通信接口：write(), resize(), clear(), fit() |
 | `FilesFragment/ViewModel` | 文件浏览界面，HiltViewModel 注入 |
 | `SettingsFragment/ViewModel` | 设置界面：SSH 配置 UI，连接状态显示，连接控制 |
 
@@ -121,6 +150,12 @@ app/src/main/
 | `bottom_nav_menu.xml` | 底部导航菜单，图标+标题对应四个 Fragment |
 | `activity_main.xml` | ConstraintLayout 包裹 NavHostFragment + BottomNavigationView |
 | `fragment_settings.xml` | 连接配置表单：主机/端口/用户名/认证方式/密码/私钥路径 |
+| `fragment_chat.xml` | 聊天布局：Toolbar + RecyclerView + EditText + SendButton |
+| `fragment_session_list.xml` | 会话列表布局：RecyclerView + FAB |
+| `item_session.xml` | 会话项布局：名称 + 最后活跃时间 |
+| `item_message_user.xml` | 用户消息气泡：右对齐，蓝色背景 |
+| `item_message_bot.xml` | AI 消息气泡：左对齐，深色背景 (#2D2D2D)，280dp 最大宽度 |
+| `fragment_terminal.xml` | WebView 布局 + LoadingOverlay |
 | `themes.xml` | Material3.Dark.NoActionBar 主题，主色 #6750A4，背景 #1C1B1F |
 | `colors.xml` | 完整 Material You 色彩系统定义 + 连接状态颜色 |
 | `connection_indicator_*.xml` | 圆形状态指示器：红色(断开)/绿色(连接)/橙色(连接中) |
@@ -219,10 +254,121 @@ ConnectionManager.handleReconnect()
 
 ---
 
+## 终端模拟器架构 (xterm.js)
+
+```
+TerminalFragment (WebView)
+    │
+    ├── TerminalWebViewClient  → 加载 assets/terminal.html
+    │
+    └── TerminalJavaScriptInterface
+            │
+            ├── write(data)     → JS terminal.write()
+            ├── resize(cols, rows) → JS terminal.resize()
+            ├── clear()         → JS terminal.clear()
+            └── fit()           → FitAddon.fit()
+
+TerminalViewModel
+    │
+    └── ShellOutputListener.onOutput(data) → write(data)
+
+PTY 数据流:
+SSH Shell → TermuxRepositoryImpl → CopyOnWriteArrayList<ShellOutputListener>
+                                              │
+                                              ├── TerminalViewModel → TerminalFragment.write()
+                                              └── ChatViewModel     → AI 响应处理
+```
+
+### Android-JS 通信接口
+
+| 方法 | 方向 | 作用 |
+|------|------|------|
+| `write(data)` | Android → JS | 向 xterm.js 写入数据 |
+| `resize(cols, rows)` | Android → JS | 调整终端大小 |
+| `clear()` | Android → JS | 清空终端 |
+| `fit()` | Android → JS | 自适应容器大小 |
+| `onTerminalData(data)` | JS → Android | 终端输入数据（通过 JavaScriptInterface） |
+
+---
+
+## 会话/聊天架构
+
+```
+ChatFragment
+    │
+    ├── Toolbar → 点击显示会话选择 Dialog
+    │
+    ├── RecyclerView (ChatAdapter)
+    │       │
+    │       ├── VIEW_TYPE_USER  → item_message_user.xml (蓝色气泡)
+    │       └── VIEW_TYPE_BOT   → item_message_bot.xml (深色气泡, Markwon 渲染)
+    │
+    └── BottomBar → EditText + SendButton
+
+SessionListFragment
+    │
+    └── RecyclerView (SessionAdapter)
+
+ChatViewModel (Shared via activityViewModels())
+    │
+    ├── session: LiveData<Session>
+    ├── messages: LiveData<List<Message>>
+    │
+    └── ShellOutputListener → 接收 AI 响应 → addMessage()
+```
+
+### Room 数据库架构
+
+```
+AppDatabase (Room 单例)
+    │
+    ├── SessionDao
+    │       ├── getAll(): List<SessionEntity>
+    │       ├── insert(entity)
+    │       ├── update(entity)
+    │       └── delete(id)
+    │
+    └── MessageDao
+            ├── getBySession(sessionId): List<MessageEntity>
+            ├── insert(entity)
+            └── deleteBySession(sessionId)
+
+SessionRepositoryImpl
+    │
+    └── 封装 SessionDao + MessageDao，提供 Domain 层接口
+```
+
+---
+
+## 多观察者 Shell 输出模式
+
+```
+TermuxRepositoryImpl
+    │
+    ├── shell: ShellChannel (单例，SSH PTY)
+    │
+    └── CopyOnWriteArrayList<ShellOutputListener>
+            │
+            ├── TerminalViewModel  → 终端显示
+            └── ChatViewModel      → AI 响应处理
+
+readOutputLoop() → 循环读取 PTY 输出
+        │
+        └── for (listener : listeners)
+                └── listener.onOutput(data)
+```
+
+### 关键设计
+
+1. **Shell 单例**: SSH PTY 只创建一次，后续复用
+2. **多观察者**: CopyOnWriteArrayList 线程安全，支持多个监听器
+3. **观察者注册**: Terminal 和 Chat 分别通过 `addShellOutputListener()` 订阅
+4. **输出分流**: 同一份 PTY 输出同时给终端和聊天使用
+
+---
+
 ## 后续扩展
 
-- Phase 3: 添加 `assets/terminal.html` + xterm.js 终端模拟器
-- Phase 3: 添加 `data/local/dao/` - Room 数据库和 DAO
-- Phase 3: 添加 `ui/chat/ChatAdapter.kt` - 消息列表适配器
+- Phase 3.5: 完整语法高亮（SyntaxHighlightPlugin + Highlight.js）
 - Phase 4: 文件浏览器完整实现
 - Phase 5: 添加 BaseFragment/BaseViewModel 基类

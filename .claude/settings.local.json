@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -sL \"https://cdn.jsdelivr.net/npm/xterm-addon-web-links@0.7.1/lib/xterm-addon-web-links.js\" -o \"D:/workerspace4idea/Claude-Code-Android-GUI/app/src/main/assets/xterm/xterm-addon-web-links.js\")",
+      "Bash(curl -sL \"https://registry.npmjs.org/xterm-addon-fit/-/xterm-addon-fit-0.8.0.tgz\" -o /tmp/fit.tgz)",
+      "Bash(tar -tzf /tmp/fit.tgz)",
+      "Read(//d/tmp/**)",
+      "Bash(tar -xzf fit.tgz)",
+      "Bash(cp package/lib/xterm-addon-fit.js \"D:/workerspace4idea/Claude-Code-Android-GUI/app/src/main/assets/xterm/xterm-addon-fit.js\")"
+    ]
+  }
+}

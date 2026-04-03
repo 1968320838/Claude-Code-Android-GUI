@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -19,6 +20,7 @@ public class TermuxRepositoryImpl implements TermuxRepository {
 
     private ConnectionCallback connectionCallback;
     private SSHClient.ShellChannel currentShell;
+    private final CopyOnWriteArrayList<ShellOutputListener> outputListeners = new CopyOnWriteArrayList<>();
 
     public TermuxRepositoryImpl() {
         this.sshClient = new SSHClient();
@@ -68,7 +70,6 @@ public class TermuxRepositoryImpl implements TermuxRepository {
             return "Error: Not connected";
         }
 
-        // 使用 exec 通道执行命令
         return sshClient.executeCommand(command);
     }
 
@@ -94,24 +95,20 @@ public class TermuxRepositoryImpl implements TermuxRepository {
                 OutputStream out = shell.getOutputStream();
                 InputStream in = shell.getInputStream();
 
-                // 发送命令
                 String fullCommand = command + "\n";
                 out.write(fullCommand.getBytes(StandardCharsets.UTF_8));
                 out.flush();
 
-                // 读取输出
                 byte[] buffer = new byte[1024];
                 int len;
                 StringBuilder output = new StringBuilder();
 
-                // 给命令一些时间执行
                 Thread.sleep(500);
 
                 while ((len = in.read(buffer)) != -1) {
                     String chunk = new String(buffer, 0, len, StandardCharsets.UTF_8);
                     output.append(chunk);
 
-                    // 当看到提示符时认为命令完成
                     if (chunk.contains("$") || chunk.contains("#") || chunk.contains(">")) {
                         Thread.sleep(200);
                         break;
@@ -142,6 +139,20 @@ public class TermuxRepositoryImpl implements TermuxRepository {
     }
 
     @Override
+    public void addShellOutputListener(ShellOutputListener listener) {
+        if (listener != null && !outputListeners.contains(listener)) {
+            outputListeners.add(listener);
+        }
+    }
+
+    @Override
+    public void removeShellOutputListener(ShellOutputListener listener) {
+        if (listener != null) {
+            outputListeners.remove(listener);
+        }
+    }
+
+    @Override
     public void openClaudeSession(ClaudeSessionCallback callback) {
         if (!sshClient.isConnected()) {
             if (callback != null) {
@@ -151,6 +162,14 @@ public class TermuxRepositoryImpl implements TermuxRepository {
         }
 
         executor.execute(() -> {
+            // 如果已经打开 shell，不要重新创建，只注册回调
+            if (currentShell != null && currentShell.isConnected()) {
+                if (callback != null) {
+                    callback.onOpened();
+                }
+                return;
+            }
+
             try {
                 currentShell = sshClient.openShellChannel();
                 if (currentShell == null) {
@@ -164,7 +183,7 @@ public class TermuxRepositoryImpl implements TermuxRepository {
 
                 // 启动读取线程
                 executor.execute(() -> {
-                    readOutputLoop(callback);
+                    readOutputLoop();
                 });
 
                 if (callback != null) {
@@ -200,13 +219,21 @@ public class TermuxRepositoryImpl implements TermuxRepository {
     @Override
     public void closeClaudeSession() {
         isReading.set(false);
+
+        // 通知所有监听器 shell 已关闭
+        for (ShellOutputListener listener : outputListeners) {
+            listener.onClosed();
+        }
+
         if (currentShell != null) {
             currentShell.disconnect();
             currentShell = null;
         }
     }
 
-    private void readOutputLoop(ClaudeSessionCallback callback) {
+    private void readOutputLoop() {
+        if (currentShell == null) return;
+
         try {
             InputStream in = currentShell.getInputStream();
             byte[] buffer = new byte[1024];
@@ -216,8 +243,9 @@ public class TermuxRepositoryImpl implements TermuxRepository {
                     int len = in.read(buffer);
                     if (len > 0) {
                         String chunk = new String(buffer, 0, len, StandardCharsets.UTF_8);
-                        if (callback != null) {
-                            callback.onOutput(chunk);
+                        // 通知所有监听器
+                        for (ShellOutputListener listener : outputListeners) {
+                            listener.onOutput(chunk);
                         }
                     }
                 }
@@ -229,12 +257,16 @@ public class TermuxRepositoryImpl implements TermuxRepository {
                 }
             }
         } catch (IOException e) {
-            if (isReading.get() && callback != null) {
-                callback.onError(e.getMessage());
+            if (isReading.get()) {
+                // 通知所有监听器发生错误
+                for (ShellOutputListener listener : outputListeners) {
+                    listener.onClosed();
+                }
             }
         } finally {
-            if (callback != null) {
-                callback.onClosed();
+            // 通知所有监听器 shell 已关闭
+            for (ShellOutputListener listener : outputListeners) {
+                listener.onClosed();
             }
         }
     }

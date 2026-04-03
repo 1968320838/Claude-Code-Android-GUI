@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ClaudeBox Terminal</title>
+    <link rel="stylesheet" href="xterm/xterm.css">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #1C1B1F;
+        }
+        #terminal-container {
+            width: 100%;
+            height: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .xterm {
+            height: 100%;
+        }
+        .xterm-viewport::-webkit-scrollbar {
+            width: 8px;
+        }
+        .xterm-viewport::-webkit-scrollbar-track {
+            background: #1C1B1F;
+        }
+        .xterm-viewport::-webkit-scrollbar-thumb {
+            background: #6750A4;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div id="terminal-container"></div>
+    <script src="xterm/xterm.js"></script>
+    <script src="xterm/xterm-addon-fit.js"></script>
+    <script src="xterm/xterm-addon-web-links.js"></script>
+    <script>
+        // Terminal instance
+        let terminal;
+
+        // Initialize terminal
+        function initTerminal() {
+            terminal = new Terminal({
+                cursorBlink: true,
+                cursorStyle: 'block',
+                fontSize: 14,
+                fontFamily: 'monospace',
+                theme: {
+                    background: '#1C1B1F',
+                    foreground: '#E6E1E5',
+                    cursor: '#D0BCFF',
+                    cursorAccent: '#1C1B1F',
+                    selection: '#6750A440',
+                    black: '#1C1B1F',
+                    red: '#F2B8B5',
+                    green: '#A8DAB5',
+                    yellow: '#E6D9AC',
+                    blue: '#D0BCFF',
+                    magenta: '#CCC2DC',
+                    cyan: '#A5D8D3',
+                    white: '#E6E1E5',
+                    brightBlack: '#49454F',
+                    brightRed: '#F2B8B5',
+                    brightGreen: '#A8DAB5',
+                    brightYellow: '#E6D9AC',
+                    brightBlue: '#D0BCFF',
+                    brightMagenta: '#CCC2DC',
+                    brightCyan: '#A5D8D3',
+                    brightWhite: '#FFFFFF'
+                },
+                allowProposedApi: true
+            });
+
+            // Load addons
+            const fitAddon = new FitAddon.FitAddon();
+            const webLinksAddon = new WebLinksAddon.WebLinksAddon();
+
+            terminal.loadAddon(fitAddon);
+            terminal.loadAddon(webLinksAddon);
+
+            // Open terminal
+            terminal.open(document.getElementById('terminal-container'));
+
+            // Fit terminal to container
+            fitAddon.fit();
+
+            // Handle resize
+            terminal.onResize(function(size) {
+                if (window.AndroidInterface && window.AndroidInterface.onTerminalResize) {
+                    window.AndroidInterface.onTerminalResize(size.cols, size.rows);
+                }
+            });
+
+            // Handle data input from user
+            terminal.onData(function(data) {
+                if (window.AndroidInterface && window.AndroidInterface.onTerminalData) {
+                    window.AndroidInterface.onTerminalData(data);
+                }
+            });
+
+            // Handle selection for copy
+            terminal.onSelectionChange(function() {
+                const selection = terminal.getSelection();
+                if (selection && window.AndroidInterface && window.AndroidInterface.onTerminalSelection) {
+                    window.AndroidInterface.onTerminalSelection(selection);
+                }
+            });
+
+            // Store fit addon for external access
+            terminal._fitAddon = fitAddon;
+
+            // Initial resize notification
+            if (window.AndroidInterface && window.AndroidInterface.onTerminalReady) {
+                window.AndroidInterface.onTerminalReady();
+            }
+        }
+
+        // Write data to terminal (called from Android)
+        function write(data) {
+            if (terminal) {
+                terminal.write(data);
+            }
+        }
+
+        // Write text with new line (called from Android)
+        function writeln(data) {
+            if (terminal) {
+                terminal.writeln(data);
+            }
+        }
+
+        // Resize terminal (called from Android)
+        function resize(cols, rows) {
+            if (terminal) {
+                terminal.resize(cols, rows);
+                if (terminal._fitAddon) {
+                    terminal._fitAddon.fit();
+                }
+            }
+        }
+
+        // Clear terminal (called from Android)
+        function clear() {
+            if (terminal) {
+                terminal.clear();
+            }
+        }
+
+        // Focus terminal
+        function focus() {
+            if (terminal) {
+                terminal.focus();
+            }
+        }
+
+        // Fit terminal to container (called from Android)
+        function fit() {
+            if (terminal && terminal._fitAddon) {
+                terminal._fitAddon.fit();
+            }
+        }
+
+        // Get terminal cols and rows
+        function getTerminalSize() {
+            if (terminal) {
+                return {
+                    cols: terminal.cols,
+                    rows: terminal.rows
+                };
+            }
+            return { cols: 80, rows: 24 };
+        }
+
+        // Set terminal font size
+        function setFontSize(size) {
+            if (terminal) {
+                terminal.options.fontSize = size;
+                if (terminal._fitAddon) {
+                    terminal._fitAddon.fit();
+                }
+            }
+        }
+
+        // Notification for connection state changes (called from Android)
+        function onConnectionStateChanged(state) {
+            if (terminal) {
+                switch(state) {
+                    case 'connected':
+                        terminal.write('\x1b[32m[Connected]\x1b[0m\r\n');
+                        break;
+                    case 'disconnected':
+                        terminal.write('\x1b[31m[Disconnected]\x1b[0m\r\n');
+                        break;
+                    case 'connecting':
+                        terminal.write('\x1b[33m[Connecting...]\x1b[0m\r\n');
+                        break;
+                }
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', initTerminal);
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (terminal && terminal._fitAddon) {
+                terminal._fitAddon.fit();
+            }
+        });
+    </script>
+</body>
+</html>

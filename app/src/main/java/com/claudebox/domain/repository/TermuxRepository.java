@@ -23,6 +23,24 @@ public interface TermuxRepository {
     }
 
     /**
+     * Shell 输出监听器（可多个观察者）
+     */
+    interface ShellOutputListener {
+        void onOutput(String data);
+        void onClosed();
+    }
+
+    /**
+     * Claude 会话回调
+     */
+    interface ClaudeSessionCallback {
+        void onOpened();
+        void onOutput(String output);
+        void onError(String error);
+        void onClosed();
+    }
+
+    /**
      * 设置连接状态回调
      */
     void setConnectionCallback(ConnectionCallback callback);
@@ -53,7 +71,17 @@ public interface TermuxRepository {
     boolean isConnected();
 
     /**
-     * 打开 Claude 会话
+     * 添加 Shell 输出监听器
+     */
+    void addShellOutputListener(ShellOutputListener listener);
+
+    /**
+     * 移除 Shell 输出监听器
+     */
+    void removeShellOutputListener(ShellOutputListener listener);
+
+    /**
+     * 打开 Claude 会话（如果尚未打开）
      */
     void openClaudeSession(ClaudeSessionCallback callback);
 
@@ -66,14 +94,4 @@ public interface TermuxRepository {
      * 关闭 Claude 会话
      */
     void closeClaudeSession();
-
-    /**
-     * Claude 会话回调
-     */
-    interface ClaudeSessionCallback {
-        void onOpened();
-        void onOutput(String output);
-        void onError(String error);
-        void onClosed();
-    }
 }
