@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Terminal font sizes -->
+    <dimen name="terminal_font_size_small">10sp</dimen>
+    <dimen name="terminal_font_size_medium">12sp</dimen>
+    <dimen name="terminal_font_size_large">14sp</dimen>
+    <dimen name="terminal_font_size_extra_large">16sp</dimen>
+
+    <!-- Chat message font sizes -->
+    <dimen name="chat_message_font_size_small">14sp</dimen>
+    <dimen name="chat_message_font_size_medium">16sp</dimen>
+    <dimen name="chat_message_font_size_large">18sp</dimen>
+    <dimen name="chat_message_font_size_extra_large">20sp</dimen>
+
+    <!-- General text sizes -->
+    <dimen name="text_size_small">12sp</dimen>
+    <dimen name="text_size_medium">14sp</dimen>
+    <dimen name="text_size_large">16sp</dimen>
+    <dimen name="text_size_extra_large">18sp</dimen>
+
+    <!-- Default font size (medium) -->
+    <dimen name="default_terminal_font_size">12sp</dimen>
+    <dimen name="default_chat_message_font_size">16sp</dimen>
+</resources>

@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
@@ -58,6 +59,30 @@ class SettingsFragment : Fragment() {
                     binding.layoutPrivateKey.isVisible = true
                 }
             }
+        }
+
+        // 主题切换
+        binding.radioTheme.setOnCheckedChangeListener { _, checkedId ->
+            val mode = when (checkedId) {
+                R.id.radio_theme_system -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                R.id.radio_theme_light -> AppCompatDelegate.MODE_NIGHT_NO
+                R.id.radio_theme_dark -> AppCompatDelegate.MODE_NIGHT_YES
+                else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+            }
+            viewModel.setThemeMode(mode)
+            Toast.makeText(context, R.string.settings_theme_applied, Toast.LENGTH_SHORT).show()
+        }
+
+        // 字体大小切换
+        binding.radioFontSize.setOnCheckedChangeListener { _, checkedId ->
+            val size = when (checkedId) {
+                R.id.radio_font_small -> SettingsViewModel.FONT_SIZE_SMALL
+                R.id.radio_font_medium -> SettingsViewModel.FONT_SIZE_MEDIUM
+                R.id.radio_font_large -> SettingsViewModel.FONT_SIZE_LARGE
+                R.id.radio_font_extra_large -> SettingsViewModel.FONT_SIZE_EXTRA_LARGE
+                else -> SettingsViewModel.FONT_SIZE_MEDIUM
+            }
+            viewModel.setFontSize(size)
         }
 
         // 测试连接按钮
@@ -148,6 +173,33 @@ class SettingsFragment : Fragment() {
         // 观察连接状态
         viewModel.connectionState.observe(viewLifecycleOwner) { state ->
             updateConnectionUI(state)
+        }
+
+        // 观察主题模式
+        viewModel.themeMode.observe(viewLifecycleOwner) { mode ->
+            val checkedId = when (mode) {
+                AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM -> R.id.radio_theme_system
+                AppCompatDelegate.MODE_NIGHT_NO -> R.id.radio_theme_light
+                AppCompatDelegate.MODE_NIGHT_YES -> R.id.radio_theme_dark
+                else -> R.id.radio_theme_system
+            }
+            if (binding.radioTheme.checkedRadioButtonId != checkedId) {
+                binding.radioTheme.check(checkedId)
+            }
+        }
+
+        // 观察字体大小
+        viewModel.fontSize.observe(viewLifecycleOwner) { size ->
+            val checkedId = when (size) {
+                SettingsViewModel.FONT_SIZE_SMALL -> R.id.radio_font_small
+                SettingsViewModel.FONT_SIZE_MEDIUM -> R.id.radio_font_medium
+                SettingsViewModel.FONT_SIZE_LARGE -> R.id.radio_font_large
+                SettingsViewModel.FONT_SIZE_EXTRA_LARGE -> R.id.radio_font_extra_large
+                else -> R.id.radio_font_medium
+            }
+            if (binding.radioFontSize.checkedRadioButtonId != checkedId) {
+                binding.radioFontSize.check(checkedId)
+            }
         }
     }
 

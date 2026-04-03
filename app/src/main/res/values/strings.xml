@@ -103,4 +103,19 @@
     <string name="preview_unsupported">Unsupported file type</string>
     <string name="preview_too_large">File too large to preview</string>
     <string name="preview_bytes">%1$d bytes</string>
+
+    <!-- 设置 - 主题 -->
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_theme_title">Theme</string>
+    <string name="settings_theme_system">Follow System</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+
+    <!-- 设置 - 字体大小 -->
+    <string name="settings_font_size_title">Font Size</string>
+    <string name="settings_font_size_small">Small</string>
+    <string name="settings_font_size_medium">Medium</string>
+    <string name="settings_font_size_large">Large</string>
+    <string name="settings_font_size_extra_large">Extra Large</string>
+    <string name="settings_theme_applied">Theme applied</string>
 </resources>

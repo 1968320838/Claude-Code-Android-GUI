@@ -90,7 +90,13 @@ app/src/main/
         ├── highlight.js            # Highlight.js 代码高亮库
         ├── highlight.min.js        # Highlight.js 压缩版
         └── preview.html            # 代码预览 HTML 模板
-```
+
+### 新增资源文件 (Phase 5)
+
+| 文件 | 作用 |
+|------|------|
+| `res/values-night/colors.xml` | 深色主题颜色覆盖 |
+| `res/values/dimens.xml` | 字体大小 dimension 资源 |
 
 ---
 
@@ -138,7 +144,7 @@ app/src/main/
 | 类 | 作用 |
 |----|------|
 | `ClaudeBoxApp` | Hilt Application，onCreate 中初始化 |
-| `MainActivity` | 导航宿主，setupWithNavController 绑定 BottomNavigation 与 NavController |
+| `MainActivity` | 导航宿主，setupWithNavController 绑定 BottomNavigation 与 NavController，启动时应用保存的主题 |
 | `ChatFragment/ViewModel` | 聊天界面，activityViewModels 共享，ShellOutputListener 接收 AI 响应，Markwon 渲染 Markdown |
 | `SessionListFragment` | 会话列表，共享 ChatViewModel |
 | `ChatAdapter` | RecyclerView 适配器，VIEW_TYPE_USER/VIEW_TYPE_BOT 区分消息类型 |
@@ -150,7 +156,7 @@ app/src/main/
 | `FilesFragment/ViewModel` | 文件浏览界面，HiltViewModel 注入，listDirectory() 获取文件列表，文件操作 (create/delete/rename) |
 | `FilesAdapter` | RecyclerView 适配器：ListAdapter + DiffUtil，文件类型图标区分，长按上下文菜单 |
 | `FilePreviewDialogFragment` | 全屏对话框预览文本/图片文件 |
-| `SettingsFragment/ViewModel` | 设置界面：SSH 配置 UI，连接状态显示，连接控制 |
+| `SettingsFragment/ViewModel` | 设置界面：SSH 配置 UI，连接状态，主题/字体大小切换 |
 
 ### 资源文件
 
@@ -159,7 +165,7 @@ app/src/main/
 | `nav_graph.xml` | Navigation Component 图，定义 chat/terminal/files/settings 四个目的地 |
 | `bottom_nav_menu.xml` | 底部导航菜单，图标+标题对应四个 Fragment |
 | `activity_main.xml` | ConstraintLayout 包裹 NavHostFragment + BottomNavigationView |
-| `fragment_settings.xml` | 连接配置表单：主机/端口/用户名/认证方式/密码/私钥路径 |
+| `fragment_settings.xml` | 连接配置表单 + 主题/字体设置选项 |
 | `fragment_chat.xml` | 聊天布局：Toolbar + RecyclerView + EditText + SendButton |
 | `fragment_session_list.xml` | 会话列表布局：RecyclerView + FAB |
 | `item_session.xml` | 会话项布局：名称 + 最后活跃时间 |
@@ -171,8 +177,11 @@ app/src/main/
 | `dialog_input.xml` | 输入对话框：TextInputLayout 用于文件名输入 |
 | `dialog_confirm.xml` | 确认对话框：删除确认消息显示 |
 | `fragment_file_preview.xml` | 文件预览布局：Toolbar + 文本/图片/加载/错误视图 |
-| `themes.xml` | Material3.Dark.NoActionBar 主题，主色 #6750A4，背景 #1C1B1F |
-| `colors.xml` | 完整 Material You 色彩系统定义 + 连接状态颜色 |
+| `themes.xml` | Material3 主题：浅色(默认) + Theme.ClaudeBox.Dark (深色) |
+| `colors.xml` | 浅色主题颜色 + Material You 色彩系统 |
+| `values-night/colors.xml` | 深色主题颜色覆盖 |
+| `dimens.xml` | 字体大小 dimension 资源 (终端/聊天) |
+| `strings.xml` | 字符串资源 (含新增主题/字体设置字符串) |
 | `connection_indicator_*.xml` | 圆形状态指示器：红色(断开)/绿色(连接)/橙色(连接中) |
 
 ---
@@ -566,4 +575,88 @@ kotlin, java, python, javascript, typescript, html, css, json, bash, yaml, markd
   - 4.2: 文件树展示（展开/折叠/面包屑）
   - 4.3: 文件操作（新建/删除/重命名）
   - 4.4: 代码高亮预览 (Highlight.js)
-- Phase 5: 主题、字体、性能优化
+- Phase 5: ✅ 主题、字体、Release APK 配置
+  - 5.1: 主题切换 (深色/浅色/跟随系统)
+  - 5.2: 字体大小 (小/中/大/超大)
+  - 5.6: Release APK 签名配置
+
+---
+
+## 主题架构
+
+### 主题资源结构
+
+| 文件 | 作用 |
+|------|------|
+| `res/values/colors.xml` | 浅色主题颜色定义 (primary, surface, background 等) |
+| `res/values-night/colors.xml` | 深色主题颜色覆盖 |
+| `res/values/themes.xml` | 定义 Theme.ClaudeBox (浅色) 和 Theme.ClaudeBox.Dark (深色) |
+| `res/values/dimens.xml` | 字体大小 dimension 资源 (终端/聊天/通用) |
+
+### 主题切换流程
+
+```
+SettingsFragment
+    │
+    ├── RadioGroup (radio_theme) 选择主题
+    │
+    └── viewModel.setThemeMode(mode)
+            │
+            ├── prefs.edit { putInt("theme_mode", mode) }
+            │
+            └── AppCompatDelegate.setDefaultNightMode(mode)
+
+MainActivity.onCreate()
+    │
+    └── applyTheme()
+            │
+            └── AppCompatDelegate.setDefaultNightMode(prefs.getInt("theme_mode", ...))
+```
+
+### 字体大小设置
+
+| 设置 | 值 | 终端字体 | 聊天字体 |
+|------|-----|---------|---------|
+| 小 | 0 | 10sp | 14sp |
+| 中 | 1 | 12sp | 16sp |
+| 大 | 2 | 14sp | 18sp |
+| 超大 | 3 | 16sp | 20sp |
+
+字体大小通过 `SharedPreferences` 存储，键为 `font_size`。
+
+---
+
+## Release APK 签名配置
+
+### build.gradle.kts 配置
+
+```kotlin
+signingConfigs {
+    create("release") {
+        // TODO: Fill in your keystore info
+        storeFile = file("your-keystore.jks")
+        storePassword = "your-password"
+        keyAlias = "your-key-alias"
+        keyPassword = "your-key-password"
+    }
+}
+
+buildTypes {
+    release {
+        signingConfig = signingConfigs.getByName("release")
+        isMinifyEnabled = true
+        isShrinkResources = true
+    }
+}
+```
+
+### ProGuard 规则覆盖
+
+| 库 | 保持规则 |
+|----|---------|
+| JSch/mwiede SSH | `-keep class com.jcraft.**`, `-keep class com.github.mwiede.**` |
+| Room | `-keep class * extends androidx.room.RoomDatabase`, `-keep @androidx.room.Entity class *` |
+| Hilt | `-keep class dagger.hilt.**`, `-keep class javax.inject.**` |
+| Markwon | `-keep class io.noties.markwon.**` |
+| Kotlin Coroutines | `-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory` |
+| Domain/Data 模型 | `-keep class com.claudebox.domain.model.**`, `-keep class com.claudebox.data.ssh.**` |

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Primary colors (Material You Purple) -->
+    <!-- Primary colors (Material You Purple - Light) -->
     <color name="primary">#6750A4</color>
     <color name="on_primary">#FFFFFF</color>
     <color name="primary_container">#EADDFF</color>
@@ -24,14 +24,6 @@
     <color name="error_container">#F9DEDC</color>
     <color name="on_error_container">#410E0B</color>
 
-    <!-- Background colors (Dark theme) -->
-    <color name="background_dark">#1C1B1F</color>
-    <color name="on_background_dark">#E6E1E5</color>
-    <color name="surface_dark">#1C1B1F</color>
-    <color name="on_surface_dark">#E6E1E5</color>
-    <color name="surface_variant_dark">#49454F</color>
-    <color name="on_surface_variant_dark">#CAC4D0</color>
-
     <!-- Background colors (Light theme) -->
     <color name="background_light">#FFFBFE</color>
     <color name="on_background_light">#1C1B1F</color>
@@ -39,6 +31,14 @@
     <color name="on_surface_light">#1C1B1F</color>
     <color name="surface_variant_light">#E7E0EC</color>
     <color name="on_surface_variant_light">#49454F</color>
+
+    <!-- Background colors (Dark theme - for values-night override) -->
+    <color name="background_dark">#1C1B1F</color>
+    <color name="on_background_dark">#E6E1E5</color>
+    <color name="surface_dark">#1C1B1F</color>
+    <color name="on_surface_dark">#E6E1E5</color>
+    <color name="surface_variant_dark">#49454F</color>
+    <color name="on_surface_variant_dark">#CAC4D0</color>
 
     <!-- Code block background -->
     <color name="code_background">#2D2D2D</color>

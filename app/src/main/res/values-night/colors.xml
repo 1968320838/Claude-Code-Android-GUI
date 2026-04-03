@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary colors (Material You Purple) -->
+    <color name="primary">#D0BCFF</color>
+    <color name="on_primary">#381E72</color>
+    <color name="primary_container">#4F378B</color>
+    <color name="on_primary_container">#EADDFF</color>
+
+    <!-- Secondary colors -->
+    <color name="secondary">#CCC2DC</color>
+    <color name="on_secondary">#332D41</color>
+    <color name="secondary_container">#4A4458</color>
+    <color name="on_secondary_container">#E8DEF8</color>
+
+    <!-- Tertiary colors -->
+    <color name="tertiary">#EFB8C8</color>
+    <color name="on_tertiary">#492532</color>
+    <color name="tertiary_container">#633B48</color>
+    <color name="on_tertiary_container">#FFD8E4</color>
+
+    <!-- Error colors -->
+    <color name="error">#F2B8B5</color>
+    <color name="on_error">#601410</color>
+    <color name="error_container">#8C1D18</color>
+    <color name="on_error_container">#F9DEDC</color>
+
+    <!-- Background colors (Dark theme) -->
+    <color name="background_dark">#1C1B1F</color>
+    <color name="on_background_dark">#E6E1E5</color>
+    <color name="surface_dark">#1C1B1F</color>
+    <color name="on_surface_dark">#E6E1E5</color>
+    <color name="surface_variant_dark">#49454F</color>
+    <color name="on_surface_variant_dark">#CAC4D0</color>
+
+    <!-- Code block background -->
+    <color name="code_background">#2D2D2D</color>
+
+    <!-- Outline -->
+    <color name="outline_dark">#938F99</color>
+
+    <!-- Breadcrumb navigation -->
+    <color name="breadcrumb_active">#E6E1E5</color>
+    <color name="breadcrumb_inactive">#938F99</color>
+    <color name="breadcrumb_separator">#938F99</color>
+</resources>

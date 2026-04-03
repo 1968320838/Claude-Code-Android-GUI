@@ -1,6 +1,9 @@
 package com.claudebox.ui.settings
 
 import android.app.Application
+import android.content.SharedPreferences
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.edit
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -21,6 +24,7 @@ class SettingsViewModel @Inject constructor(
 ) : AndroidViewModel(application) {
 
     private val configManager = ConfigManager(application)
+    private val prefs: SharedPreferences = application.getSharedPreferences("app_prefs", 0)
 
     // SSH 配置状态
     private val _sshConfig = MutableLiveData<SSHConfig>()
@@ -40,8 +44,18 @@ class SettingsViewModel @Inject constructor(
     private val _saveResult = MutableLiveData<Boolean>()
     val saveResult: LiveData<Boolean> = _saveResult
 
+    // Theme state
+    private val _themeMode = MutableLiveData<Int>()
+    val themeMode: LiveData<Int> = _themeMode
+
+    // Font size state
+    private val _fontSize = MutableLiveData<Int>()
+    val fontSize: LiveData<Int> = _fontSize
+
     init {
         loadConfig()
+        loadThemeMode()
+        loadFontSize()
     }
 
     /**
@@ -54,6 +68,56 @@ class SettingsViewModel @Inject constructor(
             }
             _sshConfig.value = config
         }
+    }
+
+    /**
+     * 加载主题模式
+     */
+    private fun loadThemeMode() {
+        val mode = prefs.getInt(KEY_THEME_MODE, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+        _themeMode.value = mode
+    }
+
+    /**
+     * 加载字体大小
+     */
+    private fun loadFontSize() {
+        val size = prefs.getInt(KEY_FONT_SIZE, FONT_SIZE_MEDIUM)
+        _fontSize.value = size
+    }
+
+    /**
+     * 设置主题模式
+     */
+    fun setThemeMode(mode: Int) {
+        prefs.edit { putInt(KEY_THEME_MODE, mode) }
+        _themeMode.value = mode
+        AppCompatDelegate.setDefaultNightMode(mode)
+    }
+
+    /**
+     * 获取当前字体大小
+     */
+    fun getFontSize(): Int {
+        return _fontSize.value ?: FONT_SIZE_MEDIUM
+    }
+
+    /**
+     * 设置字体大小
+     */
+    fun setFontSize(size: Int) {
+        prefs.edit { putInt(KEY_FONT_SIZE, size) }
+        _fontSize.value = size
+    }
+
+    companion object {
+        const val KEY_THEME_MODE = "theme_mode"
+        const val KEY_FONT_SIZE = "font_size"
+
+        const val FONT_SIZE_SMALL = 0
+        const val FONT_SIZE_MEDIUM = 1
+        const val FONT_SIZE_LARGE = 2
+        const val FONT_SIZE_EXTRA_LARGE = 3
     }
 
     /**

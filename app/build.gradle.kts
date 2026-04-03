@@ -19,13 +19,29 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            // TODO: Fill in your keystore info for release builds
+            // storeFile = file("your-keystore.jks")
+            // storePassword = "your-password"
+            // keyAlias = "your-key-alias"
+            // keyPassword = "your-key-password"
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // Uncomment and configure signing when you have a keystore
+            // signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+        debug {
+            isMinifyEnabled = false
         }
     }
 
