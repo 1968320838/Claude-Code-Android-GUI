@@ -6,7 +6,8 @@
       "Bash(tar -tzf /tmp/fit.tgz)",
       "Read(//d/tmp/**)",
       "Bash(tar -xzf fit.tgz)",
-      "Bash(cp package/lib/xterm-addon-fit.js \"D:/workerspace4idea/Claude-Code-Android-GUI/app/src/main/assets/xterm/xterm-addon-fit.js\")"
+      "Bash(cp package/lib/xterm-addon-fit.js \"D:/workerspace4idea/Claude-Code-Android-GUI/app/src/main/assets/xterm/xterm-addon-fit.js\")",
+      "Bash(./gradlew assembleDebug)"
     ]
   }
 }

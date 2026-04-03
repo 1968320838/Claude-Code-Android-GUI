@@ -63,6 +63,44 @@
     <string name="select_or_create_session">Select or create a session to start chatting</string>
     <string name="type_message">Type a message…</string>
     <string name="send">Send</string>
+
+    <!-- 文件浏览器 -->
+    <string name="files_empty">No files</string>
+    <string name="files_empty_folder">This folder is empty</string>
+    <string name="files_loading">Loading…</string>
+    <string name="files_item_count">%1$d items</string>
+    <string name="files_bytes">%1$d B</string>
+    <string name="files_kilobytes">%1$.1f KB</string>
+    <string name="files_megabytes">%1$.1f MB</string>
+    <string name="files_error">Error loading files</string>
+    <string name="files_root">/</string>
+    <string name="navigate_up">Navigate up</string>
+    <string name="refresh">Refresh</string>
+    <string name="files_tap_to_open">Tap to open</string>
+    <string name="files_expanded">Expanded</string>
+
+    <!-- 通用操作 -->
     <string name="cancel">Cancel</string>
     <string name="delete">Delete</string>
+    <string name="confirm">Confirm</string>
+
+    <!-- 文件操作 -->
+    <string name="new_file">New File</string>
+    <string name="new_folder">New Folder</string>
+    <string name="rename">Rename</string>
+    <string name="file_name">File name</string>
+    <string name="folder_name">Folder name</string>
+    <string name="delete_confirm">Delete "%1$s"?</string>
+    <string name="operation_success">%1$s</string>
+    <string name="operation_error">%1$s</string>
+    <string name="error_empty_name">Name cannot be empty</string>
+    <string name="open">Open</string>
+
+    <!-- 文件预览 -->
+    <string name="preview_title">Preview</string>
+    <string name="preview_loading">Loading…</string>
+    <string name="preview_error">Failed to load file</string>
+    <string name="preview_unsupported">Unsupported file type</string>
+    <string name="preview_too_large">File too large to preview</string>
+    <string name="preview_bytes">%1$d bytes</string>
 </resources>

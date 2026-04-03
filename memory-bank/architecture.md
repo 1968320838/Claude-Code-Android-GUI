@@ -33,7 +33,8 @@ app/src/main/
 │   │   │   └── TerminalJavaScriptInterface.kt
 │   │   ├── files/                  # 文件模块
 │   │   │   ├── FilesFragment.kt
-│   │   │   └── FilesViewModel.kt
+│   │   │   ├── FilesViewModel.kt
+│   │   │   └── FilesAdapter.kt     # 文件列表适配器
 │   │   └── settings/               # 设置模块
 │   │       ├── SettingsFragment.kt
 │   │       └── SettingsViewModel.kt
@@ -75,13 +76,20 @@ app/src/main/
 │   │   ├── colors.xml              # 颜色定义（Material You #6750A4）
 │   │   └── strings.xml             # 字符串资源
 │   └── drawable/
-│       ├── ic_*.xml                # Vector 图标
-│       └── connection_indicator_*.xml  # 连接状态指示器
+│       ├── ic_*.xml                # Vector 图标 (chat/terminal/folder/settings/add/delete/send/dropdown)
+│       ├── connection_indicator_*.xml  # 连接状态指示器
+│       ├── ic_chevron_right.xml    # 目录箭头
+│       ├── ic_file_document.xml     # 文档文件图标
+│       ├── ic_file_code.xml        # 代码文件图标
+│       ├── ic_file_image.xml       # 图片文件图标
+│       └── ic_close.xml            # 关闭按钮图标
 └── assets/
     ├── terminal.html               # xterm.js 终端页面
     ├── xterm/                      # xterm.js 库文件
     └── highlight/
-        └── highlight.js            # Highlight.js 代码高亮库
+        ├── highlight.js            # Highlight.js 代码高亮库
+        ├── highlight.min.js        # Highlight.js 压缩版
+        └── preview.html            # 代码预览 HTML 模板
 ```
 
 ---
@@ -104,9 +112,9 @@ app/src/main/
 |----|------|
 | `Session` | 会话实体：id, name, createdAt, lastActiveAt |
 | `Message` | 消息实体：id, sessionId, content(HTML), rawContent(原始), isFromUser, timestamp |
-| `FileItem` | 文件项：name, path, isDirectory, size, modifiedAt |
+| `FileItem` | 文件项：name, path, isDirectory, size, modifiedAt, parentPath, isExpanded |
 | `SessionRepository` | 会话 CRUD 接口：getSessions, createSession, deleteSession, getSession |
-| `TermuxRepository` | SSH 操作接口：connect, disconnect, executeCommand, isConnected + ShellOutputListener + ClaudeSessionCallback |
+| `TermuxRepository` | SSH 操作接口：connect, disconnect, executeCommand, isConnected + ShellOutputListener + ClaudeSessionCallback + listDirectory + createFile/createDirectory/deleteFile/renameFile + readFile |
 
 ### Data 层 (Java)
 
@@ -115,7 +123,7 @@ app/src/main/
 | `SSHConfig` | SSH 连接参数：host, port, username, authType, password, privateKeyPath, knownHostsPath, claudeWrapperPath |
 | `ConnectionState` | 连接状态基类，子类：Disconnected, Connecting, Connected, Error(message), Reconnecting(attempt) |
 | `SSHClient` | JSch 封装：connect, disconnect, executeCommand, openShellChannel, ShellChannel 内部类 |
-| `TermuxRepositoryImpl` | TermuxRepository 实现：回调模式，ExecutorService 单线程执行，Claude 会话管理，多 ShellOutputListener 支持 |
+| `TermuxRepositoryImpl` | TermuxRepository 实现：回调模式，ExecutorService 单线程执行，Claude 会话管理，多 ShellOutputListener 支持，listDirectory() 使用 ls -la 解析目录，文件操作使用 touch/mkdir/rm/mv 命令 |
 | `SessionRepositoryImpl` | SessionRepository 实现：Room DAO 封装，数据库操作 |
 | `ConnectionManager` | 单例连接管理器：状态观察，AtomicReference 线程安全，自动重连（3次/指数退避） |
 | `ConfigManager` | EncryptedSharedPreferences 封装：AES256_GCM 加密存储 SSH 配置 |
@@ -139,7 +147,9 @@ app/src/main/
 | `TerminalFragment/ViewModel` | 终端界面，WebView + xterm.js，ShellOutputListener 接收 PTY 输出 |
 | `TerminalWebViewClient` | WebViewClient，处理 terminal.html 加载 |
 | `TerminalJavaScriptInterface` | Android-JS 通信接口：write(), resize(), clear(), fit() |
-| `FilesFragment/ViewModel` | 文件浏览界面，HiltViewModel 注入 |
+| `FilesFragment/ViewModel` | 文件浏览界面，HiltViewModel 注入，listDirectory() 获取文件列表，文件操作 (create/delete/rename) |
+| `FilesAdapter` | RecyclerView 适配器：ListAdapter + DiffUtil，文件类型图标区分，长按上下文菜单 |
+| `FilePreviewDialogFragment` | 全屏对话框预览文本/图片文件 |
 | `SettingsFragment/ViewModel` | 设置界面：SSH 配置 UI，连接状态显示，连接控制 |
 
 ### 资源文件
@@ -156,6 +166,11 @@ app/src/main/
 | `item_message_user.xml` | 用户消息气泡：右对齐，蓝色背景 |
 | `item_message_bot.xml` | AI 消息气泡：左对齐，深色背景 (#2D2D2D)，280dp 最大宽度 |
 | `fragment_terminal.xml` | WebView 布局 + LoadingOverlay |
+| `fragment_files.xml` | 文件浏览器布局：路径面包屑 + RecyclerView + FAB + 加载状态 + 空状态 |
+| `item_file.xml` | 文件项布局：图标 + 名称 + 大小 + 目录箭头 |
+| `dialog_input.xml` | 输入对话框：TextInputLayout 用于文件名输入 |
+| `dialog_confirm.xml` | 确认对话框：删除确认消息显示 |
+| `fragment_file_preview.xml` | 文件预览布局：Toolbar + 文本/图片/加载/错误视图 |
 | `themes.xml` | Material3.Dark.NoActionBar 主题，主色 #6750A4，背景 #1C1B1F |
 | `colors.xml` | 完整 Material You 色彩系统定义 + 连接状态颜色 |
 | `connection_indicator_*.xml` | 圆形状态指示器：红色(断开)/绿色(连接)/橙色(连接中) |
@@ -367,8 +382,188 @@ readOutputLoop() → 循环读取 PTY 输出
 
 ---
 
+## 文件浏览器架构
+
+```
+FilesFragment
+    │
+    ├── FilesViewModel
+    │       │
+    │       ├── currentPath: LiveData<String>
+    │       ├── displayFiles: LiveData<List<FileItem>>  (扁平列表，含展开子项)
+    │       ├── breadcrumbs: LiveData<List<String>>     (路径分段)
+    │       ├── directoryCache: HashMap<String, List<FileItem>>
+    │       └── navigationEvent: LiveData<FileItem?>
+    │
+    └── FilesAdapter
+            │
+            └── RecyclerView (item_file.xml)
+
+文件列表数据流:
+SSH ls -la → TermuxRepositoryImpl.listDirectory() → FilesViewModel.loadDirectory()
+                                              ↓
+                                      directoryCache[path] = files
+                                              ↓
+                                      flatFileList 更新 → displayFiles.observe()
+                                              ↓
+                                      FilesAdapter.submitList()
+```
+
+### 目录展开/折叠流程
+
+```
+点击目录 → toggleExpand(item)
+    │
+    ├── if (item.isExpanded == false):
+    │       ├── loadAndExpandChildren(item, index)
+    │       │       ├── 检查 directoryCache
+    │       │       ├── 缓存未命中 → listDirectory() 加载
+    │       │       └── insertChildren() 插入子项到 flatFileList
+    │       └── item.isExpanded = true
+    │
+    └── if (item.isExpanded == true):
+            ├── collapseDirectory(item)
+            │       └── 移除 parentPath == item.path 的子项
+            └── item.isExpanded = false
+```
+
+### 面包屑导航
+
+```
+路径: /data/data/com.termux/files/home/project
+     │
+     ├── / → Root (点击跳转)
+     ├── /data → data (点击跳转)
+     ├── /data/data → data/data (点击跳转)
+     ├── /data/data/com.termux → com.termux (点击跳转)
+     ├── /data/data/com.termux/files → files (点击跳转)
+     └── /data/data/com.termux/files/home → home (当前，高亮)
+```
+
+### 目录列表实现
+
+1. **listDirectory()**: 使用 `ls -la` 命令获取目录内容
+2. **解析格式**: 解析 `drwxr-xr-x  2 user group 4096 Apr  3 10:00 foldername` 格式
+3. **过滤规则**: 跳过 `.` 和 `..` 目录项
+4. **排序规则**: 目录优先，再按名称字母排序
+
+### 文件类型图标
+
+| 文件类型 | 图标 | 规则 |
+|---------|------|------|
+| 目录 | `ic_folder.xml` | `isDirectory = true` |
+| 图片 | `ic_file_image.xml` | `.png/.jpg/.jpeg/.gif/.webp/.bmp` |
+| 代码 | `ic_file_code.xml` | `.kt/.java/.cpp/.c/.py/.js/.ts/.html/.css/.xml/.json/.gradle/.sh` |
+| 文档 | `ic_file_document.xml` | 其他文件 |
+
+### FileItem 字段说明
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `name` | String | 文件/目录名称 |
+| `path` | String | 完整路径 |
+| `isDirectory` | boolean | 是否为目录 |
+| `size` | long | 文件大小（目录为 0） |
+| `modifiedAt` | long | 修改时间戳 |
+| `parentPath` | String | 父目录路径 |
+| `isExpanded` | boolean | 是否展开（仅内存） |
+
+---
+
+## 文件操作架构
+
+### 操作类型
+
+| 操作 | SSH 命令 | 实现方法 |
+|------|----------|----------|
+| 创建文件 | `touch <path>` | `TermuxRepository.createFile()` |
+| 创建目录 | `mkdir <path>` | `TermuxRepository.createDirectory()` |
+| 删除文件 | `rm <path>` | `TermuxRepository.deleteFile()` |
+| 删除目录 | `rm -rf <path>` | `TermuxRepository.deleteFile()` |
+| 重命名 | `mv <old> <new>` | `TermuxRepository.renameFile()` |
+
+### 操作流程
+
+```
+FilesFragment
+    │
+    ├── FAB 点击 → showCreateDialog() → MaterialAlertDialogBuilder
+    │       │
+    │       └── 选择类型 → showInputDialog(isDirectory)
+    │               │
+    │               └── viewModel.createFile()/createDirectory()
+    │
+    ├── 长按 → showContextMenu() → PopupMenu
+    │       │
+    │       ├── Open → navigateTo() 或预览
+    │       ├── Rename → showRenameDialog() → viewModel.renameFile()
+    │       └── Delete → showDeleteConfirmDialog() → viewModel.deleteFile()
+    │
+    └── operationResult.observe() → Toast 显示结果
+```
+
+### 操作结果处理
+
+```kotlin
+data class OperationResult(
+    val type: OperationType,  // CREATE, DELETE, RENAME
+    val success: Boolean,
+    val message: String
+)
+
+viewModel.operationResult.observe { result ->
+    Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
+}
+```
+
+---
+
+## 文件预览架构
+
+```
+FilesFragment
+    │
+    └── 点击文件项 → FilePreviewDialogFragment.newInstance(item)
+            │
+            ├── showLoading() → CircularProgressIndicator
+            │
+            └── loadTextContent()
+                    │
+                    └── TermuxRepository.readFile(path, maxSize)
+                            │
+                            └── SSH: head -c <maxSize> "<path>"
+```
+
+### 预览类型判断
+
+| 文件类型 | 预览方式 |
+|---------|----------|
+| 代码文件 | WebView + Highlight.js (语法高亮) |
+| 图片文件 | ImageView (TODO) |
+| 大文件 (>100KB) | 显示 "File too large to preview" |
+| 目录 | 显示 "Cannot preview directory" |
+| 其他 | 显示 "Unsupported file type" |
+
+### 代码高亮支持的语言
+
+kotlin, java, python, javascript, typescript, html, css, json, bash, yaml, markdown, go, rust, ruby, php, sql, cpp, c, groovy, toml
+
+### FilePreviewDialogFragment 特性
+
+- 全屏对话框样式 (`Theme.ClaudeBox.FullScreenDialog`)
+- Toolbar 带关闭按钮
+- 文件路径显示
+- WebView 缩放控制
+- VS Code Dark+ 风格高亮配色
+- 支持长文本滚动
+
+---
+
 ## 后续扩展
 
-- Phase 3.5: 完整语法高亮（SyntaxHighlightPlugin + Highlight.js）
-- Phase 4: 文件浏览器完整实现
-- Phase 5: 添加 BaseFragment/BaseViewModel 基类
+- Phase 4: ✅ 文件浏览器完整实现
+  - 4.1: 文件浏览器 UI 基础
+  - 4.2: 文件树展示（展开/折叠/面包屑）
+  - 4.3: 文件操作（新建/删除/重命名）
+  - 4.4: 代码高亮预览 (Highlight.js)
+- Phase 5: 主题、字体、性能优化

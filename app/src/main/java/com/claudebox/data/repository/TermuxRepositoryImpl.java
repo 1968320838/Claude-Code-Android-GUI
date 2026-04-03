@@ -2,12 +2,15 @@ package com.claudebox.data.repository;
 
 import com.claudebox.data.ssh.SSHClient;
 import com.claudebox.data.ssh.SSHConfig;
+import com.claudebox.domain.model.FileItem;
 import com.claudebox.domain.repository.TermuxRepository;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -268,6 +271,181 @@ public class TermuxRepositoryImpl implements TermuxRepository {
             for (ShellOutputListener listener : outputListeners) {
                 listener.onClosed();
             }
+        }
+    }
+
+    @Override
+    public List<FileItem> listDirectory(String path) {
+        List<FileItem> result = new ArrayList<>();
+
+        if (!sshClient.isConnected()) {
+            return result;
+        }
+
+        try {
+            // 使用 ls -la 命令获取目录列表
+            String lsCommand = "ls -la \"" + path + "\" 2>/dev/null";
+            String output = sshClient.executeCommand(lsCommand);
+
+            if (output == null || output.isEmpty()) {
+                return result;
+            }
+
+            String[] lines = output.split("\n");
+            boolean firstLine = true;
+
+            for (String line : lines) {
+                // 跳过第一行（total）和空行
+                if (firstLine) {
+                    firstLine = false;
+                    if (line.startsWith("total")) {
+                        continue;
+                    }
+                }
+
+                line = line.trim();
+                if (line.isEmpty()) {
+                    continue;
+                }
+
+                // 解析 ls -la 格式
+                // drwxr-xr-x  2 user group 4096 Apr  3 10:00 foldername
+                // -rw-r--r--  1 user group  123 Apr  3 10:00 filename.txt
+                String[] parts = line.split("\\s+");
+                if (parts.length < 8) {
+                    continue;
+                }
+
+                boolean isDirectory = parts[0].startsWith("d");
+                String name = parts[parts.length - 1];
+
+                // 跳过 . 和 ..
+                if (name.equals(".") || name.equals("..")) {
+                    continue;
+                }
+
+                // 跳过以 . 开头的隐藏文件（可选）
+                // if (name.startsWith(".")) continue;
+
+                long size = 0;
+                if (!isDirectory && parts.length >= 5) {
+                    try {
+                        size = Long.parseLong(parts[4]);
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+
+                // 构建完整路径
+                String fullPath = path.endsWith("/") ? path + name : path + "/" + name;
+
+                // 获取修改时间（简化处理，使用当前时间）
+                long modifiedAt = System.currentTimeMillis();
+
+                result.add(new FileItem(name, fullPath, isDirectory, size, modifiedAt));
+            }
+
+            // 按目录优先、名称排序
+            result.sort((a, b) -> {
+                if (a.isDirectory() != b.isDirectory()) {
+                    return a.isDirectory() ? -1 : 1;
+                }
+                return a.getName().compareToIgnoreCase(b.getName());
+            });
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
+    @Override
+    public boolean createFile(String parentPath, String fileName) {
+        if (!sshClient.isConnected()) {
+            return false;
+        }
+
+        try {
+            String fullPath = parentPath.endsWith("/") ? parentPath + fileName : parentPath + "/" + fileName;
+            String command = "touch \"" + fullPath + "\"";
+            String result = sshClient.executeCommand(command);
+            return result == null || !result.contains("cannot touch") && !result.contains("No such file");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean createDirectory(String parentPath, String dirName) {
+        if (!sshClient.isConnected()) {
+            return false;
+        }
+
+        try {
+            String fullPath = parentPath.endsWith("/") ? parentPath + dirName : parentPath + "/" + dirName;
+            String command = "mkdir \"" + fullPath + "\"";
+            String result = sshClient.executeCommand(command);
+            return result == null || !result.contains("cannot create") && !result.contains("No such file");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean deleteFile(String path, boolean isDirectory) {
+        if (!sshClient.isConnected()) {
+            return false;
+        }
+
+        try {
+            String command = isDirectory ? "rm -rf \"" + path + "\"" : "rm \"" + path + "\"";
+            String result = sshClient.executeCommand(command);
+            return result == null || !result.contains("cannot remove") && !result.contains("No such file");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public String renameFile(String oldPath, String newName) {
+        if (!sshClient.isConnected()) {
+            return null;
+        }
+
+        try {
+            int lastSlash = oldPath.lastIndexOf('/');
+            String parentPath = oldPath.substring(0, lastSlash);
+            String newPath = parentPath.endsWith("/") ? parentPath + newName : parentPath + "/" + newName;
+
+            String command = "mv \"" + oldPath + "\" \"" + newPath + "\"";
+            String result = sshClient.executeCommand(command);
+
+            if (result == null || !result.contains("cannot rename") && !result.contains("No such file")) {
+                return newPath;
+            }
+            return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    @Override
+    public String readFile(String path, int maxSize) {
+        if (!sshClient.isConnected()) {
+            return null;
+        }
+
+        try {
+            // 使用 cat 读取文件内容，head 限制行数
+            String command = "head -c " + maxSize + " \"" + path + "\"";
+            return sshClient.executeCommand(command);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
     }
 }

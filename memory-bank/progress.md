@@ -301,6 +301,197 @@ app/src/main/
 3. **Markdown 渲染**: 使用 Markwon 库，纯 Android 实现无需 WebView
 4. **Room Entity 设计**: 使用 @Ignore 标注非静态构造函数，避免 Room 警告
 
+---
+
+## 2026-04-03 - Phase 4.1 完成 ✅
+
+### 完成内容
+
+**文件浏览器 UI 基础 (Step 4.1)**
+- `res/layout/fragment_files.xml` - 文件浏览器布局
+  - 路径面包屑 (TextView, monospace 字体)
+  - RecyclerView 文件列表
+  - CircularProgressIndicator 加载状态
+  - 空状态视图 (无文件时显示)
+- `res/layout/item_file.xml` - 文件项布局
+  - MaterialCardView 卡片样式
+  - ImageView 文件类型图标
+  - TextView 文件名和大小
+  - ImageView 目录右侧箭头
+- `ui/files/FilesAdapter.kt` - RecyclerView 适配器
+  - ListAdapter + DiffUtil 高效更新
+  - 根据扩展名区分图标 (folder/code/document/image)
+  - 文件大小格式化 (B/KB/MB)
+- `ui/files/FilesViewModel.kt` - ViewModel 完善
+  - `currentPath`, `files`, `isLoading`, `error`, `navigationEvent` LiveData
+  - `loadFiles()`, `navigateTo()`, `navigateUp()`, `refresh()` 方法
+- `ui/files/FilesFragment.kt` - Fragment 更新
+  - 连接 RecyclerView 和 Adapter
+  - 观察 ViewModel 状态
+  - Toast 预览提示
+- `domain/repository/TermuxRepository.java` - 新增 `listDirectory()` 接口
+- `data/repository/TermuxRepositoryImpl.java` - 实现 `listDirectory()`
+  - 使用 `ls -la` 命令获取目录列表
+  - 解析输出生成 FileItem 列表
+  - 目录优先、按名称排序
+- 新增图标资源:
+  - `ic_chevron_right.xml` - 目录箭头
+  - `ic_file_document.xml` - 文档图标
+  - `ic_file_code.xml` - 代码图标
+  - `ic_file_image.xml` - 图片图标
+- `res/values/strings.xml` - 新增文件浏览器相关字符串
+
+### 验证状态
+- [x] `./gradlew assembleDebug` 构建成功
+- [x] APK 生成在 `app/build/outputs/apk/debug/` (8.5 MB)
+- [x] 真机测试：文件浏览功能正常 ✅
+- [x] 目录图标正确显示 ✅
+- [x] 文件按扩展名显示正确图标 ✅
+
+### 技术决策记录
+1. **FilesViewModel 注入**: 使用 `TermuxRepository` 接口而非实现类，方便测试
+2. **listDirectory 实现**: 在 Java 层使用同步调用，避免协程复杂性
+3. **文件排序**: 目录优先，再按名称字母排序
+
+---
+
+## 2026-04-03 - Phase 4.2 完成 ✅
+
+### 完成内容
+
+**文件树展示 (Step 4.2)**
+- `domain/model/FileItem.java` - 增强
+  - 新增 `parentPath` 字段 - 记录父目录路径
+  - 新增 `isExpanded` 字段 - 追踪展开状态
+  - `getParentPathFromPath()` - Java 兼容的父路径计算
+- `ui/files/FilesAdapter.kt` - 升级
+  - 新增 `onDirectoryClick` 回调 - 处理目录展开/折叠
+  - 点击目录切换展开状态
+  - 展开时箭头旋转 90°
+- `ui/files/FilesViewModel.kt` - 完善
+  - `directoryCache` - HashMap 缓存已加载的目录内容
+  - `breadcrumbs` - 面包屑路径分段
+  - `toggleExpand()` - 展开/折叠逻辑，动态修改扁平列表
+  - `loadAndExpandChildren()` - 加载并插入子项
+  - `collapseDirectory()` - 折叠时移除子项
+  - `navigateToBreadcrumb()` - 面包屑快速跳转
+- `ui/files/FilesFragment.kt` - 更新
+  - `updateBreadcrumbs()` - 动态生成面包屑视图
+  - 当前路径高亮，非当前路径可点击跳转
+  - 返回按钮在根目录时禁用
+- `res/layout/fragment_files.xml` - 布局更新
+  - 新增路径栏 (path_bar) - 返回按钮 + 面包屑容器 + 刷新按钮
+  - HorizontalScrollView - 面包屑水平滚动
+- 新增图标资源:
+  - `ic_arrow_back.xml` - 返回按钮图标
+  - `ic_refresh.xml` - 刷新按钮图标
+- `res/values/strings.xml` - 新增 `navigate_up`, `refresh`, `files_tap_to_open`, `files_expanded`
+- `res/values/colors.xml` - 新增 `breadcrumb_active`, `breadcrumb_inactive`, `breadcrumb_separator`
+
+### 验证状态
+- [x] `./gradlew assembleDebug` 构建成功
+- [x] 真机测试：面包屑导航正常 ✅
+- [x] 返回按钮正常 ✅
+- [x] 刷新功能正常 ✅
+- [x] 目录展开/折叠正常 ✅
+
+### 技术决策记录
+1. **扁平列表设计**: 使用单一 `flatFileList` 维护所有显示项，展开时插入子项，折叠时移除
+2. **缓存策略**: 目录内容缓存于 `directoryCache`，避免重复加载
+3. **面包屑计算**: 在 ViewModel 中计算路径分段，Fragment 只负责 UI 渲染
+
+---
+
+## 2026-04-03 - Phase 4.3 完成 ✅
+
+### 完成内容
+
+**文件操作 (Step 4.3)**
+- `domain/repository/TermuxRepository.java` - 新增接口
+  - `createFile(parentPath, fileName)` - 创建文件
+  - `createDirectory(parentPath, dirName)` - 创建目录
+  - `deleteFile(path, isDirectory)` - 删除
+  - `renameFile(oldPath, newName)` - 重命名
+- `data/repository/TermuxRepositoryImpl.java` - 实现
+  - `touch` 命令创建文件
+  - `mkdir` 命令创建目录
+  - `rm / rm -rf` 删除
+  - `mv` 命令重命名
+- `ui/files/FilesViewModel.kt` - 完善
+  - `OperationResult` 数据类 + `operationResult` LiveData
+  - `createFile()`, `createDirectory()`, `deleteFile()`, `renameFile()` 方法
+- `ui/files/FilesAdapter.kt` - 升级
+  - 新增 `onItemLongClick` 回调 - 长按显示上下文菜单
+- `ui/files/FilesFragment.kt` - 更新
+  - FAB 点击显示新建菜单 (文件/文件夹)
+  - `showContextMenu()` - 长按菜单 (打开/重命名/删除)
+  - `showInputDialog()` / `showRenameDialog()` / `showDeleteConfirmDialog()` - 对话框
+- `res/layout/dialog_input.xml` - 输入对话框布局
+- `res/layout/dialog_confirm.xml` - 确认对话框布局
+- `res/layout/fragment_files.xml` - 添加 FAB，底部 padding
+- `res/values/strings.xml` - 新增通用操作和文件操作字符串
+
+### 验证状态
+- [x] `./gradlew assembleDebug` 构建成功
+- [x] 真机测试：新建文件/文件夹正常 ✅
+- [x] 长按菜单正常 ✅
+- [x] 重命名正常 ✅
+- [x] 删除确认和删除功能正常 ✅
+
+### 技术决策记录
+1. **SSH 命令封装**: 文件操作通过 `executeCommandSync` 执行 `touch/mkdir/rm/mv` 命令
+2. **对话框设计**: 使用 MaterialAlertDialogBuilder + ViewBinding
+3. **操作反馈**: 通过 `operationResult` LiveData 在 Fragment 显示 Toast
+
 ### 下一步
-- Phase 4: 文件浏览器
+- Phase 4.4: 文件预览
+- Phase 5: 主题、字体、性能优化
+
+---
+
+## 2026-04-03 - Phase 4.4 完成 ✅
+
+### 完成内容
+
+**文件预览 + 代码高亮 (Step 4.4)**
+- `domain/repository/TermuxRepository.java` - 新增 `readFile(path, maxSize)` 接口
+- `data/repository/TermuxRepositoryImpl.java` - 实现 `readFile()`
+  - 使用 `head -c` 命令读取文件内容
+- `ui/files/FilePreviewDialogFragment.kt` - 重写
+  - 全屏对话框显示文件预览
+  - WebView + Highlight.js 实现语法高亮
+  - 支持语言: kotlin, java, python, javascript, typescript, html, css, json, bash, yaml, markdown 等
+  - 大文件提示 (>100KB)
+  - 目录/错误状态处理
+- `assets/highlight/preview.html` - 新建 (Highlight.js 高亮页面模板)
+- `assets/highlight/highlight.min.js` - 新建 (Highlight.js 库)
+- `res/layout/fragment_file_preview.xml` - 更新
+  - WebView 替代 TextView 用于代码预览
+- `res/drawable/ic_close.xml` - 新建 (关闭图标)
+- `res/values/themes.xml` - 新增全屏对话框样式 `Theme.ClaudeBox.FullScreenDialog`
+- `res/values/strings.xml` - 新增预览相关字符串
+
+### 验证状态
+- [x] `./gradlew assembleDebug` 构建成功
+- [x] 真机测试：代码语法高亮正常 ✅
+- [x] 高亮颜色正确 (VS Code Dark+ 风格) ✅
+- [x] 缩放控制正常 ✅
+- [x] 关闭功能正常 ✅
+
+### 技术决策记录
+1. **预览大小限制**: 使用 100KB 限制避免大文件导致内存问题
+2. **语法高亮实现**: WebView + Highlight.js，内联 CSS 样式
+3. **高亮主题**: VS Code Dark+ 风格配色
+4. **对话框实现**: DialogFragment 全屏样式，支持关闭按钮
+
+### Phase 4 总结
+
+| Step | 内容 | 状态 |
+|------|------|------|
+| 4.1 | 文件浏览器 UI 基础 | ✅ |
+| 4.2 | 文件树展示（展开/折叠/面包屑） | ✅ |
+| 4.3 | 文件操作（新建/删除/重命名） | ✅ |
+| 4.4 | 代码高亮预览 (Highlight.js) | ✅ |
+
+### 下一步
 - Phase 5: 主题、字体、性能优化

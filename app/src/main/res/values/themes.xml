@@ -42,4 +42,11 @@
         <item name="android:navigationBarColor">@color/surface_dark</item>
     </style>
 
+    <style name="Theme.ClaudeBox.FullScreenDialog" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowBackground">@color/background_dark</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowCloseOnTouchOutside">false</item>
+    </style>
+
 </resources>

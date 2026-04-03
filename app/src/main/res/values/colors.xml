@@ -51,4 +51,9 @@
     <color name="connection_success">#4CAF50</color>
     <color name="connection_error">#F44336</color>
     <color name="connection_warning">#FF9800</color>
+
+    <!-- Breadcrumb navigation -->
+    <color name="breadcrumb_active">#E6E1E5</color>
+    <color name="breadcrumb_inactive">#938F99</color>
+    <color name="breadcrumb_separator">#938F99</color>
 </resources>

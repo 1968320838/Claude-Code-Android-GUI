@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            padding: 16px;
+            background-color: #1C1B1F;
+            color: #E6E1E5;
+            font-family: monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+        pre {
+            margin: 0;
+            padding: 12px;
+            background-color: #2D2D2D;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        code {
+            font-family: monospace;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        /* Line numbers */
+        .line-numbers {
+            display: flex;
+        }
+        .line-numbers .line-numbers-rows {
+            padding-right: 12px;
+            border-right: 1px solid #49454F;
+            margin-right: 12px;
+            user-select: none;
+        }
+        .line-numbers-rows > span {
+            display: block;
+            color: #938F99;
+        }
+        /* Highlight.js dark theme (VS Code Dark+ inspired) */
+        .hljs {
+            background: transparent;
+            color: #D4D4D4;
+        }
+        .hljs-comment,
+        .hljs-quote {
+            color: #6A9955;
+        }
+        .hljs-keyword,
+        .hljs-selector-tag,
+        .hljs-addition {
+            color: #569CD6;
+        }
+        .hljs-number,
+        .hljs-string,
+        .hljs-meta .hljs-meta-string,
+        .hljs-literal,
+        .hljs-doctag,
+        .hljs-regexp {
+            color: #CE9178;
+        }
+        .hljs-title,
+        .hljs-section,
+        .hljs-name,
+        .hljs-selector-id,
+        .hljs-selector-class {
+            color: #DCDCAA;
+        }
+        .hljs-attribute,
+        .hljs-attr,
+        .hljs-variable,
+        .hljs-template-variable,
+        .hljs-class .hljs-title,
+        .hljs-type {
+            color: #4EC9B0;
+        }
+        .hljs-symbol,
+        .hljs-bullet,
+        .hljs-subst,
+        .hljs-meta,
+        .hljs-meta .hljs-keyword,
+        .hljs-selector-attr,
+        .hljs-selector-pseudo,
+        .hljs-link {
+            color: #D16969;
+        }
+        .hljs-built_in,
+        .hljs-deletion {
+            color: #CE9178;
+        }
+        .hljs-formula {
+            background: #2D2D2D;
+        }
+        .hljs-emphasis {
+            font-style: italic;
+        }
+        .hljs-strong {
+            font-weight: bold;
+        }
+        .hljs-addition {
+            background-color: rgba(89, 156, 89, 0.3);
+        }
+        .hljs-deletion {
+            background-color: rgba(204, 81, 68, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="line-numbers">
+        <div class="line-numbers-rows">
+            <!-- Line numbers will be inserted here -->
+        </div>
+        <pre><code id="code" class="hljs"></code></pre>
+    </div>
+    <script>
+        // Get file extension from filename
+        function getLanguage(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const langMap = {
+                'kt': 'kotlin',
+                'java': 'java',
+                'cpp': 'cpp',
+                'c': 'c',
+                'h': 'c',
+                'py': 'python',
+                'js': 'javascript',
+                'ts': 'typescript',
+                'html': 'html',
+                'xml': 'xml',
+                'css': 'css',
+                'json': 'json',
+                'gradle': 'groovy',
+                'sh': 'bash',
+                'bash': 'bash',
+                'yaml': 'yaml',
+                'yml': 'yaml',
+                'toml': 'toml',
+                'md': 'markdown',
+                'txt': 'plaintext',
+                'sql': 'sql',
+                'go': 'go',
+                'rs': 'rust',
+                'rb': 'ruby',
+                'php': 'php'
+            };
+            return langMap[ext] || 'plaintext';
+        }
+
+        // Escape HTML entities
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Generate line numbers HTML
+        function generateLineNumbers(count) {
+            let html = '';
+            for (let i = 1; i <= count; i++) {
+                html += '<span>' + i + '</span>';
+            }
+            return html;
+        }
+
+        // Display code with syntax highlighting
+        function displayCode(code, filename) {
+            const lang = getLanguage(filename);
+            const codeElement = document.getElementById('code');
+
+            // Set code content and language class
+            codeElement.textContent = code;
+            codeElement.className = 'hljs language-' + lang;
+
+            // Generate line numbers
+            const lines = code.split('\n').length;
+            document.querySelector('.line-numbers-rows').innerHTML = generateLineNumbers(lines);
+
+            // Apply syntax highlighting
+            if (typeof hljs !== 'undefined') {
+                hljs.highlightElement(codeElement);
+            }
+        }
+
+        // Receive code from Android
+        function setCode(code, filename) {
+            displayCode(code, filename);
+        }
+    </script>
+    <script src="highlight.min.js"></script>
+</body>
+</html>

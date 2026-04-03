@@ -6,6 +6,8 @@ public class FileItem {
     private boolean isDirectory;
     private long size;
     private long modifiedAt;
+    private String parentPath;
+    private boolean isExpanded;
 
     public FileItem() {}
 
@@ -15,6 +17,16 @@ public class FileItem {
         this.isDirectory = isDirectory;
         this.size = size;
         this.modifiedAt = modifiedAt;
+        this.parentPath = getParentPathFromPath(path);
+        this.isExpanded = false;
+    }
+
+    private static String getParentPathFromPath(String path) {
+        int lastSlash = path.lastIndexOf('/');
+        if (lastSlash <= 0) {
+            return "/";
+        }
+        return path.substring(0, lastSlash);
     }
 
     public String getName() {
@@ -55,5 +67,21 @@ public class FileItem {
 
     public void setModifiedAt(long modifiedAt) {
         this.modifiedAt = modifiedAt;
+    }
+
+    public String getParentPath() {
+        return parentPath;
+    }
+
+    public void setParentPath(String parentPath) {
+        this.parentPath = parentPath;
+    }
+
+    public boolean isExpanded() {
+        return isExpanded;
+    }
+
+    public void setExpanded(boolean expanded) {
+        isExpanded = expanded;
     }
 }

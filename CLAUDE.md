@@ -39,12 +39,18 @@ Communication: SSH 连接到 Termux (pseudo-terminal for real-time streaming)
 
 ## Important Notes (ALWAYS APPLY)MUST
 ⚠️ **强制规则（AI 必须遵守）：**
-# 重要提示：
-# 写任何代码前必须完整阅读 memory-bank/PRD-design-document.md
-# 写任何代码前必须完整阅读 memory-bank/implementation-plan.md
-# 写任何代码前必须完整阅读 memory-bank/tech-stack.md
-# 写任何代码前必须完整阅读 memory-bank/progress.md
-# 每完成一个重大功能或里程碑后，必须更新 memory-bank/architecture.md
+
+重要提示：
+
+写任何代码前必须完整阅读 memory-bank/PRD-design-document.md
+
+写任何代码前必须完整阅读 memory-bank/implementation-plan.md
+
+写任何代码前必须完整阅读 memory-bank/tech-stack.md
+
+写任何代码前必须完整阅读 memory-bank/progress.md
+
+每完成一个重大功能或里程碑后，必须更新 memory-bank/architecture.md
 
 This is a pre-development stage project - no source code exists yet
 `memory-bank/` contains planning documents (Research.md, etc.)
